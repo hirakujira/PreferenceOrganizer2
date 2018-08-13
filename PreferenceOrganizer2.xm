@@ -77,8 +77,7 @@ static void PO2InitPrefs() {
 	PO2StringPref(appStoreAppsLabel, AppStoreAppsName, [karenLocalizer karenLocalizeString:@"APP_STORE_APPS"]);
 }
 
-void removeOldAppleThirdPartySpecifiers(NSMutableArray <PSSpecifier *> *specifiers)
-{
+void removeOldAppleThirdPartySpecifiers(NSMutableArray <PSSpecifier *> *specifiers) {
 	NSMutableArray *itemsToDelete = [NSMutableArray array];
 	for (PSSpecifier *spec in specifiers) {
 		NSString *Id = spec.identifier;
@@ -206,7 +205,7 @@ void removeOldAppleGroupSpecifiers(NSMutableArray <PSSpecifier *> *specifiers) {
 
 				// If we're in the first item of the iCloud/Mail/Notes... group, setup the key string, 
 				// grab the group from the previously enumerated specifier, and get ready to shift things into it. 
-				else if ([identifier isEqualToString:(kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_11_0) ? @"CASTLE" : @"STORE"] ) {
+				else if ([identifier isEqualToString:(kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_11_0) ? @"STORE" : @"CASTLE"] ) {
 					currentOrganizableGroup = identifier;
 					
 					NSMutableArray *newSavedGroup = [[NSMutableArray alloc] init];
@@ -297,8 +296,10 @@ void removeOldAppleGroupSpecifiers(NSMutableArray <PSSpecifier *> *specifiers) {
 				[organizableSpecifiers setObject:newSavedGroup forKey:currentOrganizableGroup];
 			}
 		}
-		AppleAppSpecifiers = [organizableSpecifiers[@"STORE"] retain];
-		// [AppleAppSpecifiers addObjectsFromArray:organizableSpecifiers[@"STORE"]];
+		AppleAppSpecifiers = [organizableSpecifiers[(kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_11_0) ? @"STORE" : @"CASTLE"] retain];
+		if (kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_11_0) {
+			[AppleAppSpecifiers addObjectsFromArray:organizableSpecifiers[@"STORE"]];
+		}
 
 		SocialAppSpecifiers = [organizableSpecifiers[@"SOCIAL_ACCOUNTS"] retain];
 
@@ -360,16 +361,23 @@ void removeOldAppleGroupSpecifiers(NSMutableArray <PSSpecifier *> *specifiers) {
 
 		if ((shouldShowAppleApps && AppleAppSpecifiers) && (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_10_0)) {
 			// Move deleted group specifiers to the end...
-			NSMutableArray *removeObjects = [[NSMutableArray alloc] init];
+			NSMutableArray *specifiersToRemove = [[NSMutableArray alloc] init];
 			for (int i = 0; i < specifiers.count; i++) {
 				PSSpecifier *specifier = (PSSpecifier *) specifiers[i];
 				NSString *identifier = specifier.identifier ?: @"";
-				// NSLog(@"iKeywi 3 %@",specifier.identifier);
+				// NSLog(@"specifier.identifier = %@",specifier.identifier);
 				if ([specifier.identifier isEqualToString:@"MEDIA_GROUP"] || [specifier.identifier isEqualToString:@"ACCOUNTS_GROUP"] || [specifier.identifier isEqualToString:@"APPLE_ACCOUNT_GROUP"]) {
-					[removeObjects addObject:specifier];
+					// Move to the end only if DDI is mounted on iOS 10 (otherwise, the Settings app will crash for… some reason)
+					// That being said, this fix DOES cause a minor layout issue where "Wallet and Apple Pay" ends up sticking to the bottom of the PreferenceOrganiser 2 group, so I'll need to find a better solution for this later
+					if (((kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_10_0) && (kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_11_0)) && ddiIsMounted) {
+						[specifiers removeObject:specifier];
+						[specifiers addObject:specifier];
+					} else {
+						[specifiersToRemove addObject:specifier];
+					}
 				}
 			}
-			[specifiers removeObjectsInArray:removeObjects];
+			[specifiers removeObjectsInArray:specifiersToRemove];
 		}
 		PO2Log([NSString stringWithFormat:@"organizableSpecifiers = %@", organizableSpecifiers], shouldSyslogSpam);
 	});
@@ -607,9 +615,9 @@ void removeOldAppleGroupSpecifiers(NSMutableArray <PSSpecifier *> *specifiers) {
 	BOOL foundMatch = NO;
 	
 	// Loop the registered TweakSpecifiers.
-	for ( PSSpecifier *specifier in TweakSpecifiers ) {
+	for (PSSpecifier *specifier in TweakSpecifiers) {
 		// If we have a match, and that match has a non-nil target, let's do this.
-		if ( [name caseInsensitiveCompare:[specifier name]] == NSOrderedSame && [specifier target] ) {
+		if ([name caseInsensitiveCompare:[specifier name]] == NSOrderedSame && [specifier target]) {
 			// We have a valid match.
 			foundMatch = YES;
 
@@ -620,24 +628,24 @@ void removeOldAppleGroupSpecifiers(NSMutableArray <PSSpecifier *> *specifiers) {
 			PSSpecifier *tweaksSpecifier = [[[self rootController] rootListController] specifierForID:tweaksLabel];
 			
 			// If we got a specifier for TweaksSpecifier... 
-			if ( tweaksSpecifier ) {
+			if (tweaksSpecifier) {
 				// Get the TweakSpecifiersController.
 				TweakSpecifiersController *tweakSpecifiersController = [[[self rootController] rootListController] controllerForSpecifier:tweaksSpecifier];
 				
 				// If we got a controller for TweakSpecifiers...
-				if ( tweakSpecifiersController ) {
+				if (tweakSpecifiersController) {
 					// Get the navigation stack count.
 					int stackCount = [[specifier target] navigationController].viewControllers.count;
 				
 					// Declare a NSMutableArray to manipulate the navigation stack (if necessary).
 					NSMutableArray *mutableStack;
 					// Switch on the navigation stack count and manipulate the stack accordingly.
-					switch ( stackCount ) {
+					switch (stackCount) {
 						// Three controllers in the navigation stack (rootListController, unknown controller, and controllerForSpecifier).
 						// Check the controller at index 1 and replace it if necessary.
 						case 3:
 							// If the user was already on the TweakSpecifiersController, then we're good.
-							if ( ![[[[specifier target] navigationController].viewControllers objectAtIndex:1] isMemberOfClass:[TweakSpecifiersController class]] ) {
+							if (![[[[specifier target] navigationController].viewControllers objectAtIndex:1] isMemberOfClass:[TweakSpecifiersController class]]) {
 								// Get a mutable copy of the navigation stack.
 								mutableStack = [NSMutableArray arrayWithArray:[[specifier target] navigationController].viewControllers];
 								// Set the TweakSpecifiersController navigationItem title.
@@ -672,7 +680,7 @@ void removeOldAppleGroupSpecifiers(NSMutableArray <PSSpecifier *> *specifiers) {
 							// Get a mutable copy of the navigation stack.
 							mutableStack = [NSMutableArray arrayWithArray:[[specifier target] navigationController].viewControllers];
 							// Remove everything in the middle.
-							[mutableStack removeObjectsInRange:NSMakeRange(1, stackCount-2)];
+							[mutableStack removeObjectsInRange:NSMakeRange(1, stackCount - 2)];
 							// Set the TweakSpecifiersController navigationItem title.
 							[[tweakSpecifiersController navigationItem] setTitle: tweaksLabel];
 							// Insert the TweakSpecifiersController as an intermediate controller.

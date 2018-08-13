@@ -4,17 +4,25 @@
 
 [**Donate Using PayPal (`rei@angelxwind.net`)**](https://paypal.me/angelXwind) (donations are greatly appreciated, *but are not (and never will be) necessary!*)
 
-#**Changelog for 4.0 and 4.0.1 ([full changelog](https://cydia.angelxwind.net/?page/net.angelxwind.preferenceorganizer2-changelog))**
+#**Changelog for 4.0.4 and 4.0.5 ([full changelog](https://cydia.angelxwind.net/?page/net.angelxwind.preferenceorganizer2-changelog))**
 
-* Fixed an issue where system apps group cells would entirely disappear on iOS 11 if the System Apps section was disabled in PreferenceOrganiser 2.
+* Fixed a bug on iOS 10 where the Settings app would sometimes crash if the DeveloperDiskImage was mounted by Xcode.
 
-* Removed Social Apps group on iOS 11, as iOS no longer has system integration with social networking services.
+* Fixed a bug on iOS 7 where the System Apps settings would be duplicated outside its category.
 
-* Fixed all iOS 11-specific issues — PreferenceOrganiser 2 is now fully compatible with iOS 11!
+* Fixed a benign and otherwise asymptomatic bug on iOS 11 caused by a typo.
 
-* Fixed a rare issue related to preferences loading affecting a small subset of device configurations that could lead to crashing.
+* Added Turkish translation — special thanks goes to /u/puyzzem for offering to translate! (/u/puyzzem tarafından Türkçe’ye çevrilmiştir)
 
-* Fixed a rare issue on iOS 10.x where resuming the Preferences app from a suspended state will sometimes cause it to crash.
+* Added German translation — special thanks goes to EPSYLON for offering to translate!
+
+* Added Malay translation — special thanks goes to Antman_Avengers for offering to translate!
+
+* Added Italian translation — special thanks goes to Giacomo Menchi for offering to translate!
+
+* Added Arabic translation — special thanks goes to iA7myd for offering to translate!
+
+* Added Croatian translation — special thanks goes to Luka iDroid for offering to translate!
 
 #**Help! My device caught fire and pineapples are coming out of the Lightning port!**
 
